@@ -12,12 +12,7 @@ export class UserController {
 	// Add users
 	@Post('/create')
 	async create(@Res() res, @Body() createUserDTO: any) {
-		const payload = {
-			...createUserDTO,
-			displayName: createUserDTO.name,
-			photoURL: createUserDTO.photoUrl,
-		}
-		const user = await this.userService.create(payload);
+		const user = await this.userService.create(createUserDTO);
 		const result = await this.userService.customerToken(user)
 		return res.status(HttpStatus.OK).json({
 			message: "success",
@@ -25,11 +20,17 @@ export class UserController {
 			user
 		})
 	}
-	// users list
-	@Post('users')
-	async users(@Res() res, @Body() payload) {
-		const users = await this.userService.users(payload);
-		return res.status(HttpStatus.OK).json(users);
+
+	@Post('/login')
+	async login(@Res() res, @Body() body) {
+		const user = await this.userService.login(body);
+		const result = await this.userService.customerToken(user)
+		return res.status(HttpStatus.OK).json({
+			message: "success",
+			result,
+			user
+		})
+
 	}
 
 	@Get('allUsers')
@@ -114,13 +115,4 @@ export class UserController {
 		})
 	}
 
-	// get count details
-	@Get('countDetails')
-	async countDetails(@Res() res) {
-		const userCountDetails = await this.userService.getUserCounts()
-		return res.status(HttpStatus.OK).json({
-			message: "success",
-			userCountDetails
-		})
-	}
 }

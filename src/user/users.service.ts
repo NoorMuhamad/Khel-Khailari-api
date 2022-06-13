@@ -8,25 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 @Injectable()
 export class UserService {
 	constructor(@InjectModel('User') private readonly userModel: Model<User>, private jwtService: JwtService) { }
-	// fetch all user
-	async users(payload): Promise<any> {
-		const page = (payload.page ? (payload.page - 1) : 0);
-		const limit = payload.limit || 20;
-		const active = payload.active || "_id"
-		const sort = (payload.direction == "desc" ? "-1" : "1") || "1"
-		let conditions = { role: payload.role.toString() }
-		if (payload.search) {
-			conditions['$or'] = [
-				{ email: new RegExp(payload.search.toString(), 'i') },
-				{ displayName: new RegExp(payload.search.toString(), 'i') },
-				{ firstName: new RegExp(payload.search.toString(), 'i') },
-				{ lastName: new RegExp(payload.search.toString(), 'i') }
-			]
-		}
-		const records = await this.userModel.find(conditions).skip(page * limit).limit(limit).sort({ [active]: sort });
-		const count = await this.userModel.find(conditions).count();
-		return { status: "success", data: { records, count } }
-	}
 
 	// find by ID
 	async find(id) {
@@ -88,38 +69,19 @@ export class UserService {
 
 	// jwt token generate
 	public async customerToken(user) {
-		const jwt = this.jwtService.sign({ email: user.email, sub: user._id, subscription: user.activePackageId? true : false })
+		const jwt = this.jwtService.sign({ email: user.email, sub: user._id})
 		return {
 			access_token: jwt,
 		}
 	}
 
-	async getUserCounts() {
-		const userCount = await this.userModel.count( {role: 'customer'})
-		const activeUserCount = await this.userModel.count({ isDeleted: false, role: 'customer' })
-		const deletedUserCount = await this.userModel.count({ isDeleted: true, role: 'customer' })
-		const subscribedUserCount = await this.userModel.count({ isDeleted: false, role: 'customer', activePackageId: {$ne: null } })
-
-		var currentDate = new Date();
-		currentDate.setDate(currentDate.getDate() - 7);
-		const weeklyUserCount = await this.userModel.count({createdAt: { $gte: currentDate.toISOString() }, role: 'customer' })
-		const weeklyActiveUserCount = await this.userModel.count({updatedAt: { $gte: currentDate.toISOString() }, isDeleted: false, role: 'customer'  })
-		const weeklyDeletedUserCount = await this.userModel.count({ isDeleted: true, updatedAt: { $gte: currentDate.toISOString() }, role: 'customer'  })
-		const weeklySubscribedUserCount = await this.userModel.count({ isDeleted: false, updatedAt: { $gte: currentDate.toISOString() }, role: 'customer', activePackageId: {$ne: null } })
-
-		const countDetails = {
-			userCount,
-			activeUserCount,
-			deletedUserCount,
-			subscribedUserCount,
-			weeklyUserCount,
-			weeklyActiveUserCount,
-			weeklyDeletedUserCount,
-			weeklySubscribedUserCount
+	async login(body): Promise<any> {
+		const user = await this.userModel.findOne({ email: body.email }).exec();
+		if (await bcrypt.compare(body.password, user.password)) {
+			return user;
 		}
-
-		return countDetails
+		else {
+			return { login: false }
+		}
 	}
-
 }
-
