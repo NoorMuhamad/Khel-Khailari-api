@@ -46,16 +46,6 @@ export class UserController {
 		if (!user) throw new NotFoundException('User does not exist!');
 		return res.status(HttpStatus.OK).json(user);
 	}
-	@Post('findByPaylaod')
-	async findByPaylaod(@Res() res, @Body() body, @Req() req) {
-		const payload = {
-			...body,
-			userId: req.user.id
-		}
-		const user = await this.userService.findByPayload(payload);
-		const token = await this.userService.customerToken(user)
-		return res.status(HttpStatus.OK).json({ user, token });
-	}
 
 
 	@Get('findOwnData')
@@ -65,38 +55,9 @@ export class UserController {
 		return res.status(HttpStatus.OK).json(user);
 	}
 
-
-	@Get('getRoomName')
-	async findRoomName(@Res() res, @Req() req) {
-		const roomName = 'connection_' + req.user.id
-		return res.status(HttpStatus.OK).json(roomName);
-	}
-
-
-	@Put('updateUserByPayload')
-	async updateUserByPayload(@Res() res, @Req() req, @Body() body) {
-		const user = await this.userService.updateUserByPayload(body, req.user.id);
-		if (!user) throw new NotFoundException('user does not exist!');
-		return res.status(HttpStatus.OK).json({
-			message: "success",
-			user
-		});
-	}
-
 	@Put('update/:id')
 	async update(@Res() res, @Param('id') id: string, @Body() createUserDTO: CreateUserDTO) {
 		const user = await this.userService.update(id, createUserDTO);
-		if (!user) throw new NotFoundException('user does not exist!');
-		return res.status(HttpStatus.OK).json({
-			message: "success",
-			user
-		});
-	}
-
-
-	@Put('updateOwnData')
-	async updateOwnData(@Res() res, @Req() req, @Body() createUserDTO: CreateUserDTO) {
-		const user = await this.userService.update(req.user.id, createUserDTO);
 		if (!user) throw new NotFoundException('user does not exist!');
 		return res.status(HttpStatus.OK).json({
 			message: "success",

@@ -20,11 +20,6 @@ export class UserService {
 		return users;
 	}
 
-	async findByPayload(payload) {
-		const user = await this.userModel.findOne(payload);
-		return user;
-	}
-
 	// create user
 	async create(createUserDTO: CreateUserDTO): Promise<User> {
 		const { email, password, ...data } = createUserDTO;
@@ -55,16 +50,6 @@ export class UserService {
 	async delete(userID): Promise<any> {
 		const deletedUser = await this.userModel.findByIdAndRemove(userID, { new: true });
 		return deletedUser;
-	}
-	// find by email  
-	async findByEmail(email): Promise<any> {
-		const user = await this.userModel.findOne({ email }).exec();
-		return user;
-	}
-
-	async updateUserByPayload(payload, userId): Promise<any> {
-		const updatedUser = await this.userModel.findByIdAndUpdate(userId, payload, { new: true });
-		return updatedUser;
 	}
 
 	// jwt token generate
